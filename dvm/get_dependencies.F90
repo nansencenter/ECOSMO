@@ -6,6 +6,8 @@ use fabm_types
 use fabm_expressions
 !use ecosmo_shared
 
+implicit none
+
 private
 
 type, extends(type_base_model), public :: type_get_dependencies

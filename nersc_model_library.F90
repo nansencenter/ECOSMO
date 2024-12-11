@@ -18,8 +18,9 @@ contains
    subroutine create(self,name,model)
 
       use fabm_nersc_ecosmo_operational
-      use fabm_nersc_ecosmo_nersc
+      use fabm_nersc_ecosmo
       use fabm_nersc_ecosmo_gmd_2023_25
+      use dvm_conservative_migrator
       use dvm_get_dependencies
       use dvm_upper_lower_boundaries
       use dvm_weight_distribution
@@ -32,8 +33,9 @@ contains
 
       select case (name)
          case ('ecosmo_operational');       allocate(type_nersc_ecosmo_operational::model)
-         case ('ecosmo_nersc');       allocate(type_nersc_ecosmo_nersc::model)
+         case ('ecosmo');       allocate(type_nersc_ecosmo::model)
          case ('ecosmo_gmd_2023_25');       allocate(type_nersc_ecosmo_gmd_2023_25::model)
+         case ('dvm_conservative_migrator'); allocate(type_conservative_migrator::model)
          case ('dvm_get_dependencies'); allocate(type_get_dependencies::model)
          case ('dvm_upper_lower_boundaries'); allocate(type_upper_lower_boundaries::model)
          case ('dvm_weight_distribution'); allocate(type_weight_distribution::model)

@@ -30,7 +30,7 @@ instances:
       sed2: 56.65
       sed3: 82.2
       sil: 1000.0
-    model: nersc_ecosmo_nersc
+    model: nersc/ecosmo
     parameters:
       EXdet: 0.0
       EXdom: 0.0
