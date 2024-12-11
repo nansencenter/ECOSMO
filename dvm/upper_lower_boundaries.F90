@@ -5,6 +5,8 @@ module dvm_upper_lower_boundaries
 use fabm_types
 use fabm_expressions
 
+implicit none
+
 private 
 
 type, extends(type_base_model), public :: type_upper_lower_boundaries
