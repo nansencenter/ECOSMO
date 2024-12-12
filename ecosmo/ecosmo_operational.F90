@@ -554,8 +554,10 @@ end subroutine initialize
    bg_loss    = max(sign(-1.0_rk,bg-0.5_rk),0.0_rk)        ! cyanobacteria
    mic_loss   = max(sign(-1.0_rk,microzoo-0.05_rk),0.0_rk) !microzooplankton
    mes_loss   = max(sign(-1.0_rk,mesozoo-0.05_rk),0.0_rk) ! mesozooplankton
-   cocco_loss = max(sign(-1.0_rk,cocco-0.5_rk),0.0_rk)       ! coccolithophores
-   caco3_loss = max(sign(-1.0_rk,caco3-0.1_rk),0.0_rk) ! caco3 - temporary for now
+   if (self%use_coccolithophores) then
+      cocco_loss = max(sign(-1.0_rk,cocco-0.5_rk),0.0_rk)       ! coccolithophores
+      caco3_loss = max(sign(-1.0_rk,caco3-0.1_rk),0.0_rk) ! caco3 - temporary for now
+   end if
 
    ! remineralisation rate
    frem = self%BioC(22) * (1._rk+20._rk*(temp**2/(13._rk**2+temp**2)))
@@ -874,10 +876,13 @@ end subroutine initialize
 
    ! phosphate
 
-   rhs = -Prod_Dia_Fla -Prod_Cocco -Prod_BG -self%BioC(28)*bg*Bg_fix &
+   rhs = -Prod_Dia_Fla -Prod_Cocco -Prod_BG &
          + self%BioC(18) * microzoo * mic_loss &
          + self%BioC(17) * mesozoo * mes_loss &
          + frem*det + fremDOM*dom
+   if (self%use_cyanos) then
+      rhs = rhs - self%BioC(28)*bg*Bg_fix
+   end if
    _SET_ODE_(self%id_pho, rhs)
 
 
