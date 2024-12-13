@@ -300,9 +300,13 @@
    if (self%use_cyanos) then
      call self%register_state_variable( self%id_bg,       'bg',      'mgC/m3',    'cyanobacteria',             minimum=1.0e-14_rk,     vertical_movement=-self%BioC(44) , &
                                       initial_value=1e-4_rk*redf(1)*redf(6) )
-     if (self%use_chl) &
+     if (self%use_chl) then
        call self%register_state_variable( self%id_bgchl,    'bgchl',   'mgChl/m3',  'cyanobacteria chl-a',       minimum=1.0e-14_rk/20., vertical_movement=-self%BioC(44) , &
                                       initial_value=1e-4_rk*redf(1)*redf(6)/27.)
+       call self%add_to_aggregate_variable(total_chlorophyll, self%id_bgchl)
+     else
+       call self%add_to_aggregate_variable(total_chlorophyll, self%id_bg, scale_factor=1.0_rk/60.0_rk)
+     end if
    end if
    if (self%use_coccolithophores) then
      call self%register_state_variable( self%id_cocco,       'ccl',      'mgC/m3',    'coccolithophores',             minimum=1.0e-14_rk,     vertical_movement=-self%sinkCocco , &
@@ -554,8 +558,10 @@ end subroutine initialize
    bg_loss    = max(sign(-1.0_rk,bg-0.5_rk),0.0_rk)        ! cyanobacteria
    mic_loss   = max(sign(-1.0_rk,microzoo-0.05_rk),0.0_rk) !microzooplankton
    mes_loss   = max(sign(-1.0_rk,mesozoo-0.05_rk),0.0_rk) ! mesozooplankton
-   cocco_loss = max(sign(-1.0_rk,cocco-0.5_rk),0.0_rk)       ! coccolithophores
-   caco3_loss = max(sign(-1.0_rk,caco3-0.1_rk),0.0_rk) ! caco3 - temporary for now
+   if (self%use_coccolithophores) then
+      cocco_loss = max(sign(-1.0_rk,cocco-0.5_rk),0.0_rk)       ! coccolithophores
+      caco3_loss = max(sign(-1.0_rk,caco3-0.1_rk),0.0_rk) ! caco3 - temporary for now
+   end if
 
    ! remineralisation rate
    frem = self%BioC(22) * (1._rk+20._rk*(temp**2/(13._rk**2+temp**2)))
@@ -581,7 +587,12 @@ end subroutine initialize
       up_nh4_cocco = nh4/(self%rNH4cocco+nh4)
       up_no3_cocco = no3/(self%rNO3cocco+no3)*exp(-self%BioC(8)*nh4)
       up_pho_cocco = pho/(self%rPO4cocco+pho)
-      up_n_cocco = up_nh4_cocco+up_no3_cocco 
+      up_n_cocco = up_nh4_cocco+up_no3_cocco
+   else
+      up_nh4_cocco = 0.0_rk
+      up_no3_cocco = 0.0_rk
+      up_pho_cocco = 0.0_rk
+      up_n_cocco = 0.0_rk
    end if 
 
    ! production and nutrient uptake
@@ -874,10 +885,13 @@ end subroutine initialize
 
    ! phosphate
 
-   rhs = -Prod_Dia_Fla -Prod_Cocco -Prod_BG -self%BioC(28)*bg*Bg_fix &
+   rhs = -Prod_Dia_Fla -Prod_Cocco -Prod_BG &
          + self%BioC(18) * microzoo * mic_loss &
          + self%BioC(17) * mesozoo * mes_loss &
          + frem*det + fremDOM*dom
+   if (self%use_cyanos) then
+      rhs = rhs - self%BioC(28)*bg*Bg_fix
+   end if
    _SET_ODE_(self%id_pho, rhs)
 
 
